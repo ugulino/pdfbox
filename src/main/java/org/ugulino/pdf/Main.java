@@ -13,7 +13,7 @@ public class Main {
             Customer customer = new Customer();
             customer.setName("Fabiano Ugulino");
             customer.setCpf("01334657422");
-            customer.setPhone("fabiano@email.com");
+            customer.setPhone("84991015656");
             customer.setEmail("fabiano@email.com");
 
             Term termHb20s = new Term();

@@ -27,7 +27,6 @@ public class PdfTermService implements PdfService {
         String base64String = "";
 
         JSONObject json = new JSONObject(data);
-
         try {
             PDDocument pdfDocument = PDDocument.load(new File(SOURCE_PATH));
             PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
@@ -35,42 +34,7 @@ public class PdfTermService implements PdfService {
 
             if (acroForm != null)
             {
-                PDField customerName = (PDField) acroForm.getField( "NomeCliente" );
-                customerName.setValue(json.getJSONObject("customer").get("name").toString());
-
-                PDField email = (PDField) acroForm.getField( "Email" );
-                email.setValue(json.getJSONObject("customer").get("email").toString());
-
-                PDField cpf = (PDField) acroForm.getField( "Cpf" );
-                cpf.setValue(json.getJSONObject("customer").get("cpf").toString());
-
-                PDField phone = (PDField) acroForm.getField( "Telefone" );
-                phone.setValue(json.getJSONObject("customer").get("phone").toString());
-
-                PDField chassi = (PDField) acroForm.getField( "Chassi" );
-                chassi.setValue(json.get("chassiNumber").toString());
-
-                PDField color = (PDField) acroForm.getField( "Cor" );
-                color.setValue(json.get("color").toString());
-
-                PDField model = (PDField) acroForm.getField( "Modelo" );
-                model.setValue(json.get("model").toString());
-
-                PDField brand = (PDField) acroForm.getField( "Marca" );
-                brand.setValue(json.get("brand").toString());
-
-                PDField yearManufacture = (PDField) acroForm.getField( "AnoFabricacao" );
-                yearManufacture.setValue(json.get("yearManufacture").toString());
-
-                PDField modelYear = (PDField) acroForm.getField( "AnoModelo" );
-                modelYear.setValue(json.get("modelYear").toString());
-
-                PDField plate = (PDField) acroForm.getField( "Placa" );
-                plate.setValue(json.get("plate").toString());
-
-                PDField fuelOption = (PDField) acroForm.getField( "Combustivel" );
-                fuelOption.setValue(json.get("fuelOption").toString());
-
+                setPdfFormValues(json, acroForm);
                 PDImageXObject image = PDImageXObject.createFromFile(FILE_IMAGE_PATH, pdfDocument);
                 drawImageField(pdfDocument, "imagem", image);
             }
@@ -109,5 +73,22 @@ public class PdfTermService implements PdfService {
         COSDictionary fieldDict = field.getCOSObject();
         COSArray fieldAreaArray = (COSArray) fieldDict.getDictionaryObject(COSName.RECT);
         return new PDRectangle(fieldAreaArray);
+    }
+
+    private void setPdfFormValues(JSONObject json, PDAcroForm acroForm)  {
+        json.keys().forEachRemaining(j ->
+        {
+            if (json.get(j).getClass().getTypeName().contains("JSONObject")) {
+                setPdfFormValues((JSONObject) json.get(j), acroForm);
+            } else {
+                System.out.println(json.get(j));
+                PDField field = (PDField) acroForm.getField(j);
+                if  (field != null) try {
+                    field.setValue(json.get(j).toString());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 }
