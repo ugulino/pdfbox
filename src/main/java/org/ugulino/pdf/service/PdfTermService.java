@@ -1,4 +1,4 @@
-package org.ugulino.pdf;
+package org.ugulino.pdf.service;
 
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -10,18 +10,24 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.json.JSONObject;
+import org.ugulino.pdf.interfaces.PdfService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 
-public class PdfTermForm {
+import static org.ugulino.pdf.constants.Constants.FILE_IMAGE_PATH;
+import static org.ugulino.pdf.constants.Constants.SOURCE_PATH;
 
-    private static final String  SOURCE_PATH = "src/main/resources/Termo.pdf";
-    private static final String FILE_IMAGE_PATH = "src/main/resources/Hb20s.png";
+public class PdfTermService implements PdfService {
 
-    public void createTermPDF(Term term) {
+    public String getPdfToBase64(String data) {
+        String base64String = "";
+
+        JSONObject json = new JSONObject(data);
+
         try {
             PDDocument pdfDocument = PDDocument.load(new File(SOURCE_PATH));
             PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
@@ -30,40 +36,40 @@ public class PdfTermForm {
             if (acroForm != null)
             {
                 PDField customerName = (PDField) acroForm.getField( "NomeCliente" );
-                customerName.setValue("Fabiano Ugulino");
+                customerName.setValue(json.getJSONObject("customer").get("name").toString());
 
                 PDField email = (PDField) acroForm.getField( "Email" );
-                email.setValue("fabiano@email.com.br");
+                email.setValue(json.getJSONObject("customer").get("email").toString());
 
                 PDField cpf = (PDField) acroForm.getField( "Cpf" );
-                cpf.setValue("1234567890");
+                cpf.setValue(json.getJSONObject("customer").get("cpf").toString());
 
                 PDField phone = (PDField) acroForm.getField( "Telefone" );
-                phone.setValue("84991015656");
+                phone.setValue(json.getJSONObject("customer").get("phone").toString());
 
                 PDField chassi = (PDField) acroForm.getField( "Chassi" );
-                chassi.setValue("125SD656EER95WW1VSUI1");
+                chassi.setValue(json.get("chassiNumber").toString());
 
                 PDField color = (PDField) acroForm.getField( "Cor" );
-                color.setValue("Branco");
+                color.setValue(json.get("color").toString());
 
                 PDField model = (PDField) acroForm.getField( "Modelo" );
-                model.setValue("HB20s");
+                model.setValue(json.get("model").toString());
 
                 PDField brand = (PDField) acroForm.getField( "Marca" );
-                brand.setValue("Hyundai");
+                brand.setValue(json.get("brand").toString());
 
                 PDField yearManufacture = (PDField) acroForm.getField( "AnoFabricacao" );
-                yearManufacture.setValue("2021");
+                yearManufacture.setValue(json.get("yearManufacture").toString());
 
                 PDField modelYear = (PDField) acroForm.getField( "AnoModelo" );
-                modelYear.setValue("2022");
+                modelYear.setValue(json.get("modelYear").toString());
 
                 PDField plate = (PDField) acroForm.getField( "Placa" );
-                plate.setValue("ABC-1234");
+                plate.setValue(json.get("plate").toString());
 
                 PDField fuelOption = (PDField) acroForm.getField( "Combustivel" );
-                fuelOption.setValue("Gasolina/Álcool");
+                fuelOption.setValue(json.get("fuelOption").toString());
 
                 PDImageXObject image = PDImageXObject.createFromFile(FILE_IMAGE_PATH, pdfDocument);
                 drawImageField(pdfDocument, "imagem", image);
@@ -74,11 +80,11 @@ public class PdfTermForm {
             pdfDocument.save(pdfStream);
             pdfDocument.close();
 
-            String base64String = Base64.getEncoder().encodeToString(pdfStream.toByteArray());
-            System.out.println(base64String);
+            base64String = Base64.getEncoder().encodeToString(pdfStream.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return base64String;
     }
 
     private void drawImageField(PDDocument document, String name, PDImageXObject image)
